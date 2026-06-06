@@ -3,27 +3,30 @@
 namespace App\Models;
 
 use App\Enums\TransactionCategory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable([
-    'uuid',
-    'serial_number',
-    'category',
-    'sender',
-    'receiver',
-    'subject',
-    'content',
-    'priority',
-    'file_path',
-    'status',
-    'approved_at',
-    'created_by',
-])]
 class Correspondence extends Model
 {
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'uuid',
+        'serial_number',
+        'category',
+        'sender',
+        'receiver',
+        'subject',
+        'content',
+        'priority',
+        'file_path',
+        'status',
+        'approved_at',
+        'created_by',
+    ];
+
     public const PRIORITY_LABELS = [
         'normal' => 'Normal',
         'urgent' => 'Urgent',
