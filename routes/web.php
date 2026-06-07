@@ -1,44 +1,56 @@
 <?php
 
-use App\Http\Controllers\CorrespondenceController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/locale/{locale}', [LocaleController::class, 'switch'])
+    ->whereIn('locale', ['ar', 'en'])
+    ->name('locale.switch');
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/verify/{uuid}', [CorrespondenceController::class, 'verify'])
-    ->name('correspondences.verify');
-
 Route::get('/dashboard', function () {
-    return redirect()->route('correspondences.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return redirect()->route('documents.index');
+})->middleware(['auth'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/correspondences', [CorrespondenceController::class, 'index'])
-        ->name('correspondences.index');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
+    Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
+    Route::get('/documents/{document}/stream', [DocumentController::class, 'stream'])->name('documents.stream');
 
-    Route::get('/correspondences/{correspondence}', [CorrespondenceController::class, 'show'])
-        ->name('correspondences.show');
-
-    Route::get('/correspondences/{correspondence}/download', [CorrespondenceController::class, 'download'])
-        ->name('correspondences.download');
-
-    Route::middleware('role:creator,checker')->group(function () {
-        Route::get('/correspondences/create/new', [CorrespondenceController::class, 'create'])
-            ->name('correspondences.create');
-
-        Route::post('/correspondences', [CorrespondenceController::class, 'store'])
-            ->name('correspondences.store');
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
     });
-
-    Route::post('/correspondences/{correspondence}/approve', [CorrespondenceController::class, 'approve'])
-        ->middleware('role:checker')
-        ->name('correspondences.approve');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('/{username}/{doctype}/{date}/{sequence}', [DocumentController::class, 'verify'])
+    ->where([
+        'username' => '[a-z][a-z0-9_]*',
+        'doctype' => 'inbound|outbound',
+        'date' => '\d{8}',
+        'sequence' => '\d{4}',
+    ])
+    ->name('documents.verify');
+
+Route::get('/{username}/{doctype}/{date}/{sequence}/file', [DocumentController::class, 'verifyStream'])
+    ->where([
+        'username' => '[a-z][a-z0-9_]*',
+        'doctype' => 'inbound|outbound',
+        'date' => '\d{8}',
+        'sequence' => '\d{4}',
+    ])
+    ->name('documents.verify.stream');

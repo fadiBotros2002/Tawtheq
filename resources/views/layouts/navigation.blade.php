@@ -3,37 +3,38 @@
         <div class="flex justify-between h-16">
             <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('correspondences.index') }}" class="flex items-center gap-2">
+                    <a href="{{ route('documents.index') }}" class="flex items-center gap-2">
                         <x-application-logo class="block h-9 w-auto fill-current text-indigo-700" />
                         <span class="hidden sm:block text-sm font-bold text-gray-800">{{ config('app.name') }}</span>
                     </a>
                 </div>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('correspondences.index')" :active="request()->routeIs('correspondences.*')">
-                        Correspondences
+                    <x-nav-link :href="route('documents.index')" :active="request()->routeIs('documents.index') || request()->routeIs('documents.show')">
+                        {{ __('diwan.nav.documents') }}
                     </x-nav-link>
-                    @if (auth()->user()->canCreateCorrespondence())
-                        <x-nav-link :href="route('correspondences.create')" :active="request()->routeIs('correspondences.create')">
-                            New Correspondence
+                    <x-nav-link :href="route('documents.create')" :active="request()->routeIs('documents.create')">
+                        {{ __('diwan.nav.upload') }}
+                    </x-nav-link>
+                    @if (auth()->user()->isAdmin())
+                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.*')">
+                            {{ __('diwan.nav.users') }}
                         </x-nav-link>
                     @endif
                 </div>
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
+                <x-locale-switcher />
+
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                    @if(auth()->user()->isChecker()) bg-emerald-100 text-emerald-800
-                    @elseif(auth()->user()->isCreator()) bg-blue-100 text-blue-800
-                    @else bg-gray-100 text-gray-800 @endif">
-                    @if(auth()->user()->isChecker()) Checker
-                    @elseif(auth()->user()->isCreator()) Creator
-                    @else Viewer @endif
+                    {{ auth()->user()->isAdmin() ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800' }}">
+                    {{ auth()->user()->username }}
                 </span>
 
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition">
                             <div>{{ Auth::user()->name }}</div>
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -45,22 +46,24 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            Profile
+                            {{ __('diwan.nav.profile') }}
                         </x-dropdown-link>
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault(); this.closest('form').submit();">
-                                Log Out
+                                {{ __('diwan.nav.logout') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>
                 </x-dropdown>
             </div>
 
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+            <div class="-me-2 flex items-center gap-2 sm:hidden">
+                <x-locale-switcher />
+
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -72,32 +75,25 @@
 
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('correspondences.index')" :active="request()->routeIs('correspondences.*')">
-                Correspondences
-            </x-responsive-nav-link>
-            @if (auth()->user()->canCreateCorrespondence())
-                <x-responsive-nav-link :href="route('correspondences.create')" :active="request()->routeIs('correspondences.create')">
-                    New Correspondence
-                </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('documents.index')">{{ __('diwan.nav.documents') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('documents.create')">{{ __('diwan.nav.upload') }}</x-responsive-nav-link>
+            @if (auth()->user()->isAdmin())
+                <x-responsive-nav-link :href="route('admin.users.index')">{{ __('diwan.nav.users') }}</x-responsive-nav-link>
             @endif
         </div>
 
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->username }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    Profile
-                </x-responsive-nav-link>
-
+                <x-responsive-nav-link :href="route('profile.edit')">{{ __('diwan.nav.profile') }}</x-responsive-nav-link>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault(); this.closest('form').submit();">
-                        Log Out
+                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
+                        {{ __('diwan.nav.logout') }}
                     </x-responsive-nav-link>
                 </form>
             </div>

@@ -1,8 +1,8 @@
 <x-guest-layout>
-    <h1 class="text-xl font-bold text-gray-900 mb-4 text-center">Forgot Password</h1>
+    <h1 class="text-xl font-bold text-gray-900 mb-4 text-center">{{ __('diwan.auth.forgot_title') }}</h1>
 
     <div class="mb-4 text-sm text-gray-600">
-        Forgot your password? No problem. Enter your email address and we will send you a password reset link.
+        {{ __('diwan.auth.forgot_hint') }}
     </div>
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -11,14 +11,18 @@
         @csrf
 
         <div>
-            <x-input-label for="email" value="Email" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
+            <x-input-label for="email" :value="__('diwan.profile.email')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="email" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center justify-between mt-4">
+            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-gray-900">
+                {{ __('diwan.auth.back_to_login') }}
+            </a>
+
             <x-primary-button>
-                Email Password Reset Link
+                {{ __('diwan.auth.send_reset_link') }}
             </x-primary-button>
         </div>
     </form>

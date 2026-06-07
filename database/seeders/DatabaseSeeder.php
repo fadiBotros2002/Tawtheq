@@ -14,27 +14,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory()->create([
-            'name' => 'creator',
-            'email' => 'creator@gmail.com',
+            'username' => 'admin',
+            'name' => 'مدير النظام',
+            'email' => 'admin@diwan.local',
             'password' => Hash::make('123123123'),
-            'role' => 'creator',
-            'email_verified_at' => now(),
+            'role' => 'admin',
         ]);
 
         User::factory()->create([
-            'name' => 'checker',
-            'email' => 'checker@gmail.com',
+            'username' => 'ahmad',
+            'name' => 'أحمد',
+            'email' => 'ahmad@diwan.local',
             'password' => Hash::make('123123123'),
-            'role' => 'checker',
-            'email_verified_at' => now(),
-        ]);
-
-        User::factory()->create([
-            'name' => 'viewer',
-            'email' => 'viewer@gmail.com',
-            'password' => Hash::make('123123123'),
-            'role' => 'viewer',
-            'email_verified_at' => now(),
+            'role' => 'user',
         ]);
     }
 }

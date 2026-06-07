@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -17,6 +17,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'username',
         'name',
         'email',
         'password',
@@ -44,23 +45,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function isCreator(): bool
+    public function documents(): HasMany
     {
-        return $this->role === 'creator';
+        return $this->hasMany(Document::class);
     }
 
-    public function isChecker(): bool
+    public function isAdmin(): bool
     {
-        return $this->role === 'checker';
-    }
-
-    public function isViewer(): bool
-    {
-        return $this->role === 'viewer';
-    }
-
-    public function canCreateCorrespondence(): bool
-    {
-        return in_array($this->role, ['creator', 'checker'], true);
+        return $this->role === 'admin';
     }
 }

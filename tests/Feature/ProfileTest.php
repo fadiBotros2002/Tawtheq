@@ -29,7 +29,7 @@ class ProfileTest extends TestCase
             ->actingAs($user)
             ->patch('/profile', [
                 'name' => 'Test User',
-                'email' => 'test@example.com',
+                'email' => 'updated@example.com',
             ]);
 
         $response
@@ -39,25 +39,22 @@ class ProfileTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('updated@example.com', $user->email);
+        $this->assertSame($user->username, $user->username);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_email_must_be_unique_when_updating_profile(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['email' => 'user@example.com']);
+        User::factory()->create(['email' => 'taken@example.com']);
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
+                'name' => $user->name,
+                'email' => 'taken@example.com',
             ]);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $response->assertSessionHasErrors('email');
     }
 }

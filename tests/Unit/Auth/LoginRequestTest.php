@@ -14,34 +14,23 @@ class LoginRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_validation_rules_require_email_and_password(): void
+    public function test_validation_rules_require_username_and_password(): void
     {
         $validator = Validator::make([], (new LoginRequest)->rules());
 
         $this->assertTrue($validator->fails());
-        $this->assertArrayHasKey('email', $validator->errors()->toArray());
+        $this->assertArrayHasKey('username', $validator->errors()->toArray());
         $this->assertArrayHasKey('password', $validator->errors()->toArray());
     }
 
-    public function test_validation_rejects_invalid_email_format(): void
-    {
-        $validator = Validator::make(
-            ['email' => 'not-an-email', 'password' => 'secret'],
-            (new LoginRequest)->rules()
-        );
-
-        $this->assertTrue($validator->fails());
-        $this->assertArrayHasKey('email', $validator->errors()->toArray());
-    }
-
-    public function test_throttle_key_is_based_on_lowercase_email_and_ip(): void
+    public function test_throttle_key_is_based_on_lowercase_username_and_ip(): void
     {
         $request = LoginRequest::create('/login', 'POST', [
-            'email' => 'User@Example.com',
+            'username' => 'Ahmad',
         ]);
         $request->server->set('REMOTE_ADDR', '192.168.1.1');
 
-        $this->assertSame('user@example.com|192.168.1.1', $request->throttleKey());
+        $this->assertSame('ahmad|192.168.1.1', $request->throttleKey());
     }
 
     public function test_authenticate_succeeds_with_valid_credentials(): void
@@ -49,7 +38,7 @@ class LoginRequestTest extends TestCase
         $user = User::factory()->create();
 
         $request = LoginRequest::create('/login', 'POST', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
         $request->setContainer($this->app);
@@ -64,7 +53,7 @@ class LoginRequestTest extends TestCase
         $user = User::factory()->create();
 
         $request = LoginRequest::create('/login', 'POST', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'wrong-password',
         ]);
         $request->setContainer($this->app);
@@ -79,7 +68,7 @@ class LoginRequestTest extends TestCase
         $user = User::factory()->create();
 
         $request = LoginRequest::create('/login', 'POST', [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'wrong-password',
         ]);
         $request->server->set('REMOTE_ADDR', '10.0.0.1');
