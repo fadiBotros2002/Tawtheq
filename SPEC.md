@@ -176,8 +176,8 @@ documents/{username}/{type}/{upload_date}/{filename}
    - ينشئ سجل Document
         ↓
 4. يُعرض:
-   - رابط التحقق العام
-   - QR Code يوجّه للرابط
+   - رابط التحقق العام (نسخ + فتح)
+   - QR Code يوجّه للرابط (تنزيل PNG)
         ↓
 5. أي شخص يفتح الرابط العام:
    - يرى metadata (username, type, date, sequence, filename)
@@ -212,7 +212,7 @@ documents/{username}/{type}/{upload_date}/{filename}
 | GET | `/documents` | `documents.index` | قائمة الوثائق |
 | GET | `/documents/create` | `documents.create` | نموذج رفع |
 | POST | `/documents` | `documents.store` | حفظ وثيقة |
-| GET | `/documents/{document}` | `documents.show` | تفاصيل + QR |
+| GET | `/documents/{document}` | `documents.show` | تفاصيل + QR + نسخ الرابط |
 | GET | `/documents/{document}/stream` | `documents.stream` | بث الملف (مسجّل) |
 | GET | `/profile` | `profile.edit` | الملف الشخصي |
 | PATCH | `/profile` | `profile.update` | تحديث الاسم والبريد |
@@ -291,7 +291,7 @@ resources/views/
 ├── documents/
 │   ├── index.blade.php
 │   ├── create.blade.php
-│   └── show.blade.php             # QR + verify URL
+│   └── show.blade.php             # QR + verify URL + نسخ/تنزيل
 ├── public/
 │   └── verify.blade.php           # صفحة التحقق العامة
 └── admin/users/
@@ -342,6 +342,8 @@ AWS_BUCKET=
 
 - التبديل: `/locale/{locale}` — يُحفظ في الجلسة
 - مكوّن `<x-locale-switcher />` في شريط التنقل وصفحات الضيف — أيقونة لغة (globe) مع قائمة منسدلة
+- صفحة التحقق العامة: `<x-locale-switcher labeled />` — زر واضح بعنوان «اللغة» واللغة الحالية
+- صفحة التحقق العامة: شارة خضراء «الوثيقة موثّقة» مع أيقونة ✓
 - ملفات الترجمة: `lang/{ar,en}/diwan.php`
 - `DocumentType::label()` يستخدم `__('diwan.document_type.*')`
 
@@ -360,7 +362,7 @@ AWS_BUCKET=
 - [x] تخزين خاص على S3
 - [x] بث الملفات عبر Laravel proxy (بدون روابط S3)
 - [x] رابط تحقق عام بالصيغة المحددة
-- [x] QR Code بعد الرفع
+- [x] QR Code بعد الرفع (تنزيل PNG + نسخ رابط التحقق)
 - [x] صفحة تحقق عامة + معاينة ملف
 - [x] 33 اختبار PHPUnit
 
@@ -408,3 +410,5 @@ php artisan test
 | 2026-06-07 | إصلاح موضع مبدّل اللغة في صفحات الضيف (زاوية بطاقة النموذج العلوية) |
 | 2026-06-07 | إصلاح 419: توحيد APP_URL مع المتصفح + روابط نسبية لتبديل اللغة والنماذج |
 | 2026-06-07 | تغيير اسم المشروع من cms إلى Tawtheq (APP_NAME، قاعدة البيانات، npm، الترجمات) |
+| 2026-06-07 | صفحة التحقق العامة: شارة توثيق خضراء + مبدّل لغة بعنوان واضح (`labeled`) |
+| 2026-06-07 | صفحة تفاصيل الوثيقة: زر نسخ رابط التحقق + تنزيل QR كـ PNG |

@@ -7,17 +7,31 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-gray-100">
-    <div class="fixed top-0 inset-x-0 z-50 flex justify-end px-4 py-3 pointer-events-none">
-        <div class="pointer-events-auto">
-            <x-locale-switcher />
-        </div>
-    </div>
-
-    <div class="min-h-screen py-16 px-4">
+    <div class="min-h-screen py-8 sm:py-12 px-4">
         <div class="max-w-3xl mx-auto space-y-6">
-            <div class="text-center">
-                <h1 class="text-2xl font-bold text-gray-900">{{ __('diwan.verify.title') }}</h1>
-                <p class="text-sm text-gray-500 mt-2">{{ __('diwan.verify_subtitle') }}</p>
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div class="text-center sm:text-start flex-1">
+                    <h1 class="text-2xl font-bold text-gray-900">{{ __('diwan.verify.title') }}</h1>
+                    <p class="text-sm text-gray-500 mt-2">{{ __('diwan.verify_subtitle') }}</p>
+                </div>
+                <div class="flex justify-center sm:justify-end shrink-0">
+                    <x-locale-switcher
+                        labeled
+                        :align="app()->getLocale() === 'ar' ? 'left' : 'right'"
+                    />
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 rounded-xl border border-green-300 bg-green-100 px-5 py-4 shadow-sm">
+                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-600 text-white shadow-md ring-4 ring-green-200">
+                    <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-lg font-semibold text-green-900">{{ __('diwan.verify.verified') }}</p>
+                    <p class="text-sm text-green-800 mt-0.5">{{ __('diwan.verify.verified_hint') }}</p>
+                </div>
             </div>
 
             <div class="bg-white shadow-sm rounded-lg p-6 space-y-6">

@@ -64,7 +64,10 @@ return [
         'upload_date' => 'Upload date',
         'verify_url' => 'Public verification URL',
         'open' => 'Open',
+        'copy_link' => 'Copy link',
+        'copied' => 'Copied',
         'qr' => 'QR code',
+        'download_qr' => 'Download QR',
         'preview' => 'Preview file',
         'back_to_list' => 'Back to list',
     ],
@@ -76,6 +79,8 @@ return [
 
     'verify' => [
         'title' => 'Document verification',
+        'verified' => 'Document verified',
+        'verified_hint' => 'This document is registered and authenticated in Tawtheq.',
         'user' => 'User',
         'transaction_type' => 'Transaction type',
         'upload_date' => 'Upload date',
