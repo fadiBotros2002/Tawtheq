@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'app_subtitle' => 'Diwan — Electronic document archiving',
-    'verify_subtitle' => 'Diwan — Electronic verification',
+    'app_subtitle' => 'Tawtheq — Electronic document archiving',
+    'verify_subtitle' => 'Tawtheq — Electronic verification',
 
     'nav' => [
         'documents' => 'Documents',

@@ -17,7 +17,7 @@
     </x-slot>
 
     <x-slot name="content">
-        <a href="{{ route('locale.switch', 'ar') }}"
+        <a href="{{ route('locale.switch', 'ar', absolute: false) }}"
            class="flex items-center gap-3 px-4 py-2.5 text-sm transition
                   {{ $current === 'ar' ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}"
            @if ($current === 'ar') aria-current="true" @endif>
@@ -33,7 +33,7 @@
             @endif
         </a>
 
-        <a href="{{ route('locale.switch', 'en') }}"
+        <a href="{{ route('locale.switch', 'en', absolute: false) }}"
            class="flex items-center gap-3 px-4 py-2.5 text-sm transition
                   {{ $current === 'en' ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}"
            @if ($current === 'en') aria-current="true" @endif>

@@ -15,17 +15,17 @@ class DatabaseSeeder extends Seeder
     {
         User::factory()->create([
             'username' => 'admin',
-            'name' => 'مدير النظام',
-            'email' => 'admin@diwan.local',
-            'password' => Hash::make('123123123'),
+            'name' => 'System Admin',
+            'email' => 'admin@asas.com',
+            'password' => Hash::make('admin@1122'),
             'role' => 'admin',
         ]);
 
         User::factory()->create([
-            'username' => 'ahmad',
-            'name' => 'أحمد',
-            'email' => 'ahmad@diwan.local',
-            'password' => Hash::make('123123123'),
+            'username' => 'Fadi',
+            'name' => 'fadi',
+            'email' => 'fadibotros99@gmail.com',
+            'password' => Hash::make('Fadi@1122'),
             'role' => 'user',
         ]);
     }

@@ -23,6 +23,6 @@ class LocaleController extends Controller
 
         $request->session()->put('locale', $locale);
 
-        return back();
+        return redirect()->back(fallback: route('login', absolute: false));
     }
 }

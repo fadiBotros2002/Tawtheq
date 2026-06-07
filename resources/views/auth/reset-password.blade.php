@@ -1,7 +1,7 @@
 <x-guest-layout>
     <h1 class="text-xl font-bold text-gray-900 mb-6 text-center">{{ __('diwan.auth.reset_title') }}</h1>
 
-    <form method="POST" action="{{ route('password.store') }}">
+    <form method="POST" action="{{ route('password.store', absolute: false) }}">
         @csrf
 
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
