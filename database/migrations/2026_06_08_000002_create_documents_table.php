@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('name_slug');
+            $table->string('reference_number')->unique();
             $table->enum('type', ['inbound', 'outbound']);
             $table->string('upload_date', 8);
             $table->unsignedInteger('sequence')->unique();
@@ -22,7 +26,7 @@ return new class extends Migration
             $table->string('mime_type')->nullable();
             $table->timestamps();
 
-            $table->unique(['user_id', 'type', 'upload_date', 'sequence']);
+            $table->unique(['user_id', 'type', 'category_id', 'upload_date', 'sequence']);
         });
     }
 

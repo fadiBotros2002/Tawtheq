@@ -16,8 +16,11 @@
                     <x-nav-link :href="route('documents.create')" :active="request()->routeIs('documents.create')">
                         {{ __('diwan.nav.upload') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                        {{ __('diwan.nav.categories') }}
+                    </x-nav-link>
                     @if (auth()->user()->isAdmin())
-                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.*')">
+                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                             {{ __('diwan.nav.users') }}
                         </x-nav-link>
                     @endif
@@ -77,6 +80,7 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('documents.index')">{{ __('diwan.nav.documents') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('documents.create')">{{ __('diwan.nav.upload') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('categories.index')">{{ __('diwan.nav.categories') }}</x-responsive-nav-link>
             @if (auth()->user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.users.index')">{{ __('diwan.nav.users') }}</x-responsive-nav-link>
             @endif

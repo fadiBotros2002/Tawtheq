@@ -2,12 +2,11 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\DocumentType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreDocumentRequest extends FormRequest
+class StoreCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,14 +24,16 @@ class StoreDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:2', 'max:100'],
-            'type' => ['required', Rule::enum(DocumentType::class)],
-            'category_id' => [
+            'name_ar' => ['required', 'string', 'max:255'],
+            'name_en' => ['required', 'string', 'max:255'],
+            'slug' => [
                 'required',
-                'integer',
-                Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
+                'string',
+                'min:2',
+                'max:50',
+                'regex:/^[a-z][a-z0-9-]*$/',
+                Rule::unique('categories', 'slug')->where('user_id', $this->user()->id),
             ],
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
         ];
     }
 
@@ -42,10 +43,9 @@ class StoreDocumentRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'name' => __('diwan.documents.name'),
-            'type' => 'document type',
-            'category_id' => 'category',
-            'file' => 'document file',
+            'name_ar' => 'Arabic name',
+            'name_en' => 'English name',
+            'slug' => 'slug',
         ];
     }
 }

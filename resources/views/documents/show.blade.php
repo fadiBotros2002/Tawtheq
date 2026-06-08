@@ -57,6 +57,14 @@
                      },
                  }">
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div class="sm:col-span-2">
+                        <dt class="text-gray-500">{{ __('diwan.documents.name') }}</dt>
+                        <dd class="font-semibold text-gray-900">{{ $document->name }}</dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-gray-500">{{ __('diwan.documents.reference_number') }}</dt>
+                        <dd class="font-mono text-sm text-gray-900">{{ $document->reference_number }}</dd>
+                    </div>
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.documents.sequence') }}</dt>
                         <dd class="font-mono font-semibold text-gray-900">{{ $document->formattedSequence() }}</dd>
@@ -64,6 +72,10 @@
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.documents.type') }}</dt>
                         <dd class="text-gray-900">{{ $document->type->label() }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-500">{{ __('diwan.documents.category') }}</dt>
+                        <dd class="text-gray-900">{{ $document->category->label() }} <span class="text-gray-400 font-mono text-xs">({{ $document->category->slug }})</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.documents.upload_date') }}</dt>

@@ -36,6 +36,14 @@
 
             <div class="bg-white shadow-sm rounded-lg p-6 space-y-6">
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div class="sm:col-span-2">
+                        <dt class="text-gray-500">{{ __('diwan.verify.document_name') }}</dt>
+                        <dd class="font-semibold text-gray-900">{{ $document->name }}</dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-gray-500">{{ __('diwan.verify.reference_number') }}</dt>
+                        <dd class="font-mono text-sm text-gray-900">{{ $document->reference_number }}</dd>
+                    </div>
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.verify.user') }}</dt>
                         <dd class="font-semibold text-gray-900">{{ $document->user->username }}</dd>
@@ -43,6 +51,10 @@
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.verify.transaction_type') }}</dt>
                         <dd class="text-gray-900">{{ $document->type->label() }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-500">{{ __('diwan.verify.category') }}</dt>
+                        <dd class="text-gray-900">{{ $document->category->label() }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.verify.upload_date') }}</dt>
@@ -61,20 +73,10 @@
                 <div class="border-t border-gray-100 pt-6">
                     <p class="text-sm text-gray-500 mb-3">{{ __('diwan.verify.preview') }}</p>
                     @if (str_starts_with($document->mime_type ?? '', 'image/'))
-                        <img src="{{ route('documents.verify.stream', [
-                            'username' => $document->user->username,
-                            'doctype' => $document->type->value,
-                            'date' => $document->upload_date,
-                            'sequence' => $document->formattedSequence(),
-                        ]) }}" alt="{{ $document->original_filename }}" class="max-w-full rounded-lg border border-gray-200">
+                        <img src="{{ route('documents.verify.stream', $document->verifyRouteParams()) }}" alt="{{ $document->original_filename }}" class="max-w-full rounded-lg border border-gray-200">
                     @else
                         <iframe
-                            src="{{ route('documents.verify.stream', [
-                                'username' => $document->user->username,
-                                'doctype' => $document->type->value,
-                                'date' => $document->upload_date,
-                                'sequence' => $document->formattedSequence(),
-                            ]) }}"
+                            src="{{ route('documents.verify.stream', $document->verifyRouteParams()) }}"
                             class="w-full h-[70vh] rounded-lg border border-gray-200"
                             title="{{ $document->original_filename }}">
                         </iframe>

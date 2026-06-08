@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\DocumentType;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Models\Document;
-use App\Models\User;
 use App\Services\DocumentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +24,7 @@ class DocumentController extends Controller
     public function index(Request $request): View
     {
         $documents = Document::query()
-            ->with('user')
+            ->with(['user', 'category'])
             ->when(! $request->user()->isAdmin(), fn ($query) => $query->where('user_id', $request->user()->id))
             ->latest()
             ->paginate(15);
@@ -36,10 +35,13 @@ class DocumentController extends Controller
     /**
      * Show the upload form.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        $categories = $request->user()->categories()->orderBy('slug')->get();
+
         return view('documents.create', [
             'types' => DocumentType::cases(),
+            'categories' => $categories,
         ]);
     }
 
@@ -64,6 +66,8 @@ class DocumentController extends Controller
      */
     public function show(Document $document): View
     {
+        $document->load(['user', 'category']);
+
         return view('documents.show', compact('document'));
     }
 
@@ -84,19 +88,15 @@ class DocumentController extends Controller
     /**
      * Public verification page with metadata and secure file preview.
      */
-    public function verify(string $username, string $doctype, string $date, string $sequence): View
-    {
-        abort_unless(in_array($doctype, ['inbound', 'outbound'], true), 404);
-        abort_unless(preg_match('/^\d{8}$/', $date), 404);
-
-        $user = User::query()->where('username', $username)->firstOrFail();
-
-        $document = Document::query()
-            ->where('user_id', $user->id)
-            ->where('type', $doctype)
-            ->where('upload_date', $date)
-            ->where('sequence', (int) ltrim($sequence, '0') ?: 0)
-            ->firstOrFail();
+    public function verify(
+        string $document_name,
+        string $doctype,
+        string $category,
+        string $date,
+        string $sequence
+    ): View {
+        $document = $this->findDocumentForVerify($document_name, $doctype, $category, $date, $sequence);
+        $document->load(['user', 'category']);
 
         return view('public.verify', compact('document'));
     }
@@ -104,19 +104,14 @@ class DocumentController extends Controller
     /**
      * Public file stream for the verification page.
      */
-    public function verifyStream(string $username, string $doctype, string $date, string $sequence): StreamedResponse
-    {
-        abort_unless(in_array($doctype, ['inbound', 'outbound'], true), 404);
-        abort_unless(preg_match('/^\d{8}$/', $date), 404);
-
-        $user = User::query()->where('username', $username)->firstOrFail();
-
-        $document = Document::query()
-            ->where('user_id', $user->id)
-            ->where('type', $doctype)
-            ->where('upload_date', $date)
-            ->where('sequence', (int) ltrim($sequence, '0') ?: 0)
-            ->firstOrFail();
+    public function verifyStream(
+        string $document_name,
+        string $doctype,
+        string $category,
+        string $date,
+        string $sequence
+    ): StreamedResponse {
+        $document = $this->findDocumentForVerify($document_name, $doctype, $category, $date, $sequence);
 
         abort_unless(Storage::disk('s3')->exists($document->s3_path), 404);
 
@@ -125,5 +120,25 @@ class DocumentController extends Controller
             $document->original_filename,
             ['Content-Disposition' => 'inline']
         );
+    }
+
+    private function findDocumentForVerify(
+        string $document_name,
+        string $doctype,
+        string $category,
+        string $date,
+        string $sequence
+    ): Document {
+        abort_unless(in_array($doctype, ['inbound', 'outbound'], true), 404);
+        abort_unless(preg_match('/^\d{8}$/', $date), 404);
+
+        return Document::query()
+            ->with(['user', 'category'])
+            ->where('name_slug', $document_name)
+            ->where('type', $doctype)
+            ->whereHas('category', fn ($query) => $query->where('slug', $category))
+            ->where('upload_date', $date)
+            ->where('sequence', (int) ltrim($sequence, '0') ?: 0)
+            ->firstOrFail();
     }
 }

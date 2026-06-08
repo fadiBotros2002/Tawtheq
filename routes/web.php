@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
@@ -25,6 +26,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::get('/documents/{document}/stream', [DocumentController::class, 'stream'])->name('documents.stream');
 
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
@@ -37,19 +42,21 @@ Route::middleware(['auth'])->group(function () {
 
 require __DIR__.'/auth.php';
 
-Route::get('/{username}/{doctype}/{date}/{sequence}', [DocumentController::class, 'verify'])
+Route::get('/{document_name}/{doctype}/{category}/{date}/{sequence}', [DocumentController::class, 'verify'])
     ->where([
-        'username' => '[a-z][a-z0-9_]*',
+        'document_name' => '[a-z][a-z0-9-]*',
         'doctype' => 'inbound|outbound',
+        'category' => '[a-z][a-z0-9-]*',
         'date' => '\d{8}',
         'sequence' => '\d{4}',
     ])
     ->name('documents.verify');
 
-Route::get('/{username}/{doctype}/{date}/{sequence}/file', [DocumentController::class, 'verifyStream'])
+Route::get('/{document_name}/{doctype}/{category}/{date}/{sequence}/file', [DocumentController::class, 'verifyStream'])
     ->where([
-        'username' => '[a-z][a-z0-9_]*',
+        'document_name' => '[a-z][a-z0-9-]*',
         'doctype' => 'inbound|outbound',
+        'category' => '[a-z][a-z0-9-]*',
         'date' => '\d{8}',
         'sequence' => '\d{4}',
     ])

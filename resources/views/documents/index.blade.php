@@ -24,8 +24,10 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.name') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.sequence') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.type') }}</th>
+                                <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.category') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.user') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.date') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.file') }}</th>
@@ -35,6 +37,9 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($documents as $document)
                                 <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $document->name }}
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                                         {{ $document->formattedSequence() }}
                                     </td>
@@ -44,6 +49,7 @@
                                             {{ $document->type->label() }}
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $document->category->label() }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $document->user->username }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $document->upload_date }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-700 max-w-xs truncate">{{ $document->original_filename }}</td>
@@ -55,7 +61,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                                         {{ __('diwan.documents.empty') }}
                                     </td>
                                 </tr>

@@ -1,7 +1,7 @@
 # SPEC — نظام توثيق (Tawtheq)
 
-> **آخر تحديث:** 2026-06-07  
-> **الحالة:** مُنفَّذ ويعمل (33 اختبار يمرّ)
+> **آخر تحديث:** 2026-06-08  
+> **الحالة:** مُنفَّذ ويعمل (47 اختبار يمرّ)
 
 ---
 
@@ -44,7 +44,7 @@
 | Database | MySQL (إنتاج) / SQLite (تطوير) |
 | Storage | AWS S3 عبر `league/flysystem-aws-s3-v3` |
 | QR Code | `simplesoftwareio/simple-qrcode` |
-| Tests | PHPUnit (33 test) |
+| Tests | PHPUnit (47 test) |
 
 ---
 
@@ -106,24 +106,68 @@
 
 Enum: `App\Enums\DocumentType`
 
-### 4.2 التسلسل (Sequence)
+### 4.2 التصنيفات (Categories)
+
+كل وثيقة مرتبطة بتصنيف واحد عبر `category_id`.  
+**كل مستخدم ينشئ تصنيفاته الخاصة** — لا توجد تصنيفات عالمية مشتركة.
+
+| العمود | الوصف |
+|--------|-------|
+| `user_id` | FK → المستخدم المالك للتصنيف |
+| `name_ar` | الاسم بالعربية (للعرض في الواجهة) |
+| `name_en` | الاسم بالإنجليزية (للعرض في الواجهة) |
+| `slug` | معرّف URL — **فريد لكل مستخدم** (`unique(user_id, slug)`) |
+
+**إدارة التصنيفات:**
+- المسار: `/categories` (قائمة) و `/categories/create` (إضافة)
+- المستخدم يربط وثائقه بتصنيفاته فقط
+- يجب إنشاء تصنيف واحد على الأقل قبل رفع وثيقة
+- مستخدمان مختلفان يمكن أن يستخدما نفس الـ slug (مثل `finance`) — الرابط يميّزهما عبر `username`
+
+**لماذا slug وليس id في الرابط؟**
+- الرابط يصبح مقروءاً: `/inbound/finance/...` أوضح من `/inbound/3/...`
+- يبقى ثابتاً إذا تغيّر الاسم العربي/الإنجليزي في الواجهة
+- آمن في URL (بدون مسافات أو أحرف عربية)
+- في نظام ديوان داخلي، الفائدة الأساسية **تنظيم وفهم الرابط** وليس SEO
+
+### 4.3 اسم الوثيقة ورقم المرجع
+
+كل وثيقة لها **اسم** يُدخله المستخدم عند الرفع (`name`).
+
+| العمود | الوصف |
+|--------|-------|
+| `name` | اسم الوثيقة للعرض (عربي أو إنجليزي) |
+| `name_slug` | معرّف URL — يُولَّد تلقائياً من الاسم عبر `Str::slug()` |
+| `reference_number` | رقم مرجع فريد عالمياً |
+
+**صيغة رقم المرجع:**
+```
+{name_slug}-{type}-{category_slug}-{upload_date}-{sequence}
+```
+
+**مثال:** `invoice-inbound-electronics-08062026-0001`
+
+- إذا كان الاسم عربياً فقط ولم يُنتج slug صالحاً، يُستخدم `doc-{sequence}` كـ fallback
+- يُفضّل إدخال اسم بالإنجليزية (مثل `invoice`) لرابط تحقق مقروء
+
+### 4.4 التسلسل (Sequence)
 - رقم صحيح **تراكمي عالمي** — لا يتصفر أبداً: `1, 2, 3, 4...`
 - يزداد مع **كل وثيقة جديدة** بغض النظر عن النوع أو المستخدم
 - يُولَّد داخل `DB::transaction` + `lockForUpdate()` لمنع race conditions
 - يُخزَّن كـ `integer`، يُعرض في الروابط بصيغة **4 أرقام** مع padding: `0001`, `0004`
 
-### 4.3 تاريخ الرفع (`upload_date`)
+### 4.5 تاريخ الرفع (`upload_date`)
 - صيغة: **`dmY`** (يوم/شهر/سنة بدون فواصل)
 - مثال: `07062026` = 7 يونيو 2026
 - يُحسب عند الرفع: `now()->format('dmY')`
 
-### 4.4 الملفات المقبولة
+### 4.6 الملفات المقبولة
 - PDF, JPG, JPEG, PNG
 - حد أقصى: 50 MB (`max:51200` KB)
 
-### 4.5 مسار S3 (خاص)
+### 4.7 مسار S3 (خاص)
 ```
-documents/{username}/{type}/{upload_date}/{filename}
+documents/{username}/{type}/{category_slug}/{upload_date}/{filename}
 ```
 - visibility: **private** (لا روابط S3 مباشرة أبداً)
 - البث عبر: `Storage::disk('s3')->response($path)`
@@ -135,25 +179,26 @@ documents/{username}/{type}/{upload_date}/{filename}
 ### 5.1 صيغة الرابط (إلزامية)
 
 ```
-/{username}/{doctype}/{date}/{sequence}
+/{document_name}/{doctype}/{category}/{date}/{sequence}
 ```
 
 **مثال:**
 ```
-/ahmad/outbound/07062026/0004
+/invoice/inbound/finance/08062026/0001
 ```
 
 | الجزء | القاعدة |
 |-------|---------|
-| `username` | `[a-z][a-z0-9_]*` |
+| `document_name` | slug اسم الوثيقة `[a-z][a-z0-9-]*` |
 | `doctype` | `inbound` أو `outbound` |
+| `category` | slug التصنيف `[a-z][a-z0-9-]*` |
 | `date` | 8 أرقام `dmY` |
 | `sequence` | 4 أرقام مع padding |
 
 ### 5.2 بث الملف العام
 
 ```
-/{username}/{doctype}/{date}/{sequence}/file
+/{document_name}/{doctype}/{category}/{date}/{sequence}/file
 ```
 
 ### 5.3 قاعدة المسارات (مهمة)
@@ -167,11 +212,12 @@ documents/{username}/{type}/{upload_date}/{filename}
 ```
 1. المستخدم يسجّل دخول (username)
         ↓
-2. يختار نوع المعاملة (وارد/صادر) ويرفع الملف
+2. ينشئ تصنيفاته (إن لم تكن موجودة)، ثم يُدخل اسم الوثيقة ويختار نوع المعاملة (وارد/صادر) والتصنيف ويرفع الملف
         ↓
 3. DocumentService:
    - يقفل آخر sequence (lockForUpdate)
    - يحسب التالي (+1)
+   - يُولّد name_slug و reference_number
    - يرفع الملف لـ S3 خاص
    - ينشئ سجل Document
         ↓
@@ -180,7 +226,7 @@ documents/{username}/{type}/{upload_date}/{filename}
    - QR Code يوجّه للرابط (تنزيل PNG)
         ↓
 5. أي شخص يفتح الرابط العام:
-   - يرى metadata (username, type, date, sequence, filename)
+   - يرى metadata (name, reference_number, username, type, category, date, sequence, filename)
    - معاينة الملف عبر /file (stream من S3 بدون كشف URL)
 ```
 
@@ -194,8 +240,8 @@ documents/{username}/{type}/{upload_date}/{filename}
 |--------|------|-------|-------|
 | GET | `/` | — | redirect → login |
 | GET | `/locale/{locale}` | `locale.switch` | تبديل اللغة (`ar` \| `en`) |
-| GET | `/{username}/{doctype}/{date}/{sequence}` | `documents.verify` | صفحة تحقق عامة |
-| GET | `/{username}/{doctype}/{date}/{sequence}/file` | `documents.verify.stream` | بث الملف للعامة |
+| GET | `/{document_name}/{doctype}/{category}/{date}/{sequence}` | `documents.verify` | صفحة تحقق عامة |
+| GET | `/{document_name}/{doctype}/{category}/{date}/{sequence}/file` | `documents.verify.stream` | بث الملف للعامة |
 
 ### 7.2 يتطلب auth
 
@@ -214,6 +260,9 @@ documents/{username}/{type}/{upload_date}/{filename}
 | POST | `/documents` | `documents.store` | حفظ وثيقة |
 | GET | `/documents/{document}` | `documents.show` | تفاصيل + QR + نسخ الرابط |
 | GET | `/documents/{document}/stream` | `documents.stream` | بث الملف (مسجّل) |
+| GET | `/categories` | `categories.index` | تصنيفات المستخدم |
+| GET | `/categories/create` | `categories.create` | إضافة تصنيف |
+| POST | `/categories` | `categories.store` | حفظ تصنيف |
 | GET | `/profile` | `profile.edit` | الملف الشخصي |
 | PATCH | `/profile` | `profile.update` | تحديث الاسم والبريد |
 
@@ -243,12 +292,29 @@ documents/{username}/{type}/{upload_date}/{filename}
 | `remember_token` | string | |
 | `timestamps` | | |
 
-### 8.2 `documents`
+### 8.2 `categories`
+
+| العمود | النوع | ملاحظات |
+|--------|-------|---------|
+| `id` | bigint | PK |
+| `user_id` | FK → users | cascade delete — المالك |
+| `name_ar` | string | الاسم بالعربية |
+| `name_en` | string | الاسم بالإنجليزية |
+| `slug` | string | فريد لكل مستخدم — يُستخدم في URL ومسار S3 |
+| `timestamps` | | |
+
+**Indexes:** `(user_id, slug)` → unique
+
+### 8.3 `documents`
 
 | العمود | النوع | ملاحظات |
 |--------|-------|---------|
 | `id` | bigint | PK |
 | `user_id` | FK → users | cascade delete |
+| `category_id` | FK → categories | cascade delete |
+| `name` | string | اسم الوثيقة (عرض) |
+| `name_slug` | string | slug للرابط |
+| `reference_number` | string | unique — رقم المرجع |
 | `type` | enum | `inbound` \| `outbound` |
 | `upload_date` | string(8) | `dmY` |
 | `sequence` | unsigned int | unique عالمي |
@@ -259,7 +325,8 @@ documents/{username}/{type}/{upload_date}/{filename}
 
 **Indexes:**
 - `sequence` → unique
-- `(user_id, type, upload_date, sequence)` → unique
+- `reference_number` → unique
+- `(user_id, type, category_id, upload_date, sequence)` → unique
 
 ---
 
@@ -271,6 +338,7 @@ app/
 │   └── DocumentType.php          # inbound | outbound
 ├── Http/
 │   ├── Controllers/
+│   │   ├── CategoryController.php
 │   │   ├── DocumentController.php
 │   │   ├── LocaleController.php
 │   │   └── Admin/UserController.php
@@ -278,16 +346,21 @@ app/
 │   │   ├── EnsureUserIsAdmin.php  # alias: admin
 │   │   └── SetLocale.php          # ar/en من الجلسة
 │   └── Requests/
+│       ├── StoreCategoryRequest.php
 │       ├── StoreDocumentRequest.php
 │       ├── Admin/StoreUserRequest.php
 │       └── Auth/LoginRequest.php    # username-based
 ├── Models/
+│   ├── Category.php
 │   ├── Document.php
 │   └── User.php
 └── Services/
     └── DocumentService.php        # sequence + S3 upload
 
 resources/views/
+├── categories/
+│   ├── index.blade.php
+│   └── create.blade.php
 ├── documents/
 │   ├── index.blade.php
 │   ├── create.blade.php
@@ -305,8 +378,12 @@ routes/
 database/
 ├── migrations/
 │   ├── 0001_01_01_000000_create_users_table.php
-│   └── 2026_06_07_000002_create_documents_table.php
+│   ├── 2026_06_08_000001_create_categories_table.php
+│   └── 2026_06_08_000002_create_documents_table.php
 └── seeders/DatabaseSeeder.php
+└── factories/
+    ├── CategoryFactory.php
+    └── DocumentFactory.php
 
 lang/
 ├── ar/diwan.php                   # ترجمات التطبيق (عربي)
@@ -357,22 +434,26 @@ AWS_BUCKET=
 - [x] استعادة كلمة المرور عبر البريد (forgot password)
 - [x] تحديث البريد في الملف الشخصي
 - [x] ترجمة ar/en مع مبدّل لغة
-- [x] رفع وثائق (inbound/outbound)
+- [x] رفع وثائق (inbound/outbound) مع اسم الوثيقة + اختيار تصنيف
+- [x] رقم مرجع تلقائي (`name-type-category-date-sequence`)
+- [x] رابط تحقق يتضمّن اسم الوثيقة (slug)
+- [x] تصنيفات وثائق خاصة بكل مستخدم (إضافة + ربط بالوثائق + slug في الرابط)
 - [x] تسلسل تراكمي عالمي مع DB locking
 - [x] تخزين خاص على S3
 - [x] بث الملفات عبر Laravel proxy (بدون روابط S3)
 - [x] رابط تحقق عام بالصيغة المحددة
 - [x] QR Code بعد الرفع (تنزيل PNG + نسخ رابط التحقق)
 - [x] صفحة تحقق عامة + معاينة ملف
-- [x] 33 اختبار PHPUnit
+- [x] 47 اختبار PHPUnit (DocumentCategoryTest + CategoryManagementTest)
 
 ---
 
 ## 12. ما هو غير مُنفَّذ ❌
 
 - [ ] فلترة/بحث في قائمة الوثائق
-- [ ] تعديل أو حذف وثيقة بعد الرفع
-- [ ] اختبارات Document workflow (feature tests)
+- [ ] تعديل وثيقة بعد الرفع
+- [ ] حذف وثيقة بعد الرفع
+- [ ] تعديل أو حذف تصنيف بعد الإنشاء
 - [ ] دعم MinIO محلي للتطوير بدون AWS
 - [ ] API REST
 - [ ] إشعارات
@@ -412,3 +493,8 @@ php artisan test
 | 2026-06-07 | تغيير اسم المشروع من cms إلى Tawtheq (APP_NAME، قاعدة البيانات، npm، الترجمات) |
 | 2026-06-07 | صفحة التحقق العامة: شارة توثيق خضراء + مبدّل لغة بعنوان واضح (`labeled`) |
 | 2026-06-07 | صفحة تفاصيل الوثيقة: زر نسخ رابط التحقق + تنزيل QR كـ PNG |
+| 2026-06-08 | إضافة تصنيفات (categories) مع slug في رابط التحقق ومسار S3 + اختبارات |
+| 2026-06-08 | التصنيفات أصبحت خاصة بكل مستخدم — إضافة `/categories` + ربط الوثائق بتصنيفات المالك فقط |
+| 2026-06-08 | دمج migrations (categories + documents بالحالة النهائية) — حذف migrations التعديل التراكمية |
+| 2026-06-08 | اسم الوثيقة + رقم المرجع + رابط تحقق جديد (`/{document_name}/...`) |
+| 2026-06-08 | إلغاء صفحة إدارة S3 للمدير (`/admin/documents`) |
