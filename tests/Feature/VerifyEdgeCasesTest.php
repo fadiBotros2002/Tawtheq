@@ -52,4 +52,6 @@ class VerifyEdgeCasesTest extends TestCase
 
         $this->get('/invoice/inbound/finance/08062026/0009')->assertNotFound();
     }
+
+
 }
