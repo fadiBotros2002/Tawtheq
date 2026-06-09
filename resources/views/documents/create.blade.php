@@ -60,13 +60,14 @@
 
                     <div>
                         <x-input-label for="file" :value="__('diwan.documents.file_input')" />
-                        <input type="file" name="file" id="file" required accept=".pdf,.jpg,.jpeg,.png"
+                        <input type="file" name="file" id="file" accept=".pdf,.jpg,.jpeg,.png"
                                class="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1 text-xs text-gray-500">{{ __('diwan.documents.file_optional_hint') }}</p>
                         <x-input-error :messages="$errors->get('file')" class="mt-2" />
                     </div>
 
                     <div class="flex justify-end">
-                        <x-primary-button :disabled="$categories->isEmpty()">{{ __('diwan.documents.submit_upload') }}</x-primary-button>
+                        <x-primary-button :disabled="$categories->isEmpty()">{{ __('diwan.documents.submit_register') }}</x-primary-button>
                     </div>
                 </form>
             </div>

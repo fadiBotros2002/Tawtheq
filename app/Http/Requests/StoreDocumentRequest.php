@@ -32,7 +32,7 @@ class StoreDocumentRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')->where('user_id', $this->user()->id),
             ],
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
+            'file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:51200'],
         ];
     }
 

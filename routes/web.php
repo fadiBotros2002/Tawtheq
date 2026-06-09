@@ -23,6 +23,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::get('/documents/create', [DocumentController::class, 'create'])->name('documents.create');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::post('/documents/{document}/file', [DocumentController::class, 'attachFile'])->name('documents.attach-file');
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::get('/documents/{document}/stream', [DocumentController::class, 'stream'])->name('documents.stream');
 

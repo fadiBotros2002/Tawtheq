@@ -56,6 +56,13 @@
                          img.src = blobUrl;
                      },
                  }">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                        {{ $document->isVerified() ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                        {{ $document->status->label() }}
+                    </span>
+                </div>
+
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div class="sm:col-span-2">
                         <dt class="text-gray-500">{{ __('diwan.documents.name') }}</dt>
@@ -83,7 +90,9 @@
                     </div>
                     <div>
                         <dt class="text-gray-500">{{ __('diwan.documents.file') }}</dt>
-                        <dd class="text-gray-900">{{ $document->original_filename }}</dd>
+                        <dd class="text-gray-900">
+                            {{ $document->original_filename ?? __('diwan.documents.no_file_yet') }}
+                        </dd>
                     </div>
                 </dl>
 
@@ -114,11 +123,34 @@
                     </button>
                 </div>
 
+                @if ($document->isDraft())
+                    <div class="border-t border-gray-100 pt-6 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900">{{ __('diwan.documents.attach_file_title') }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">{{ __('diwan.documents.attach_file_hint') }}</p>
+                        </div>
+                        <form method="POST" action="{{ route('documents.attach-file', $document) }}" enctype="multipart/form-data" class="space-y-4">
+                            @csrf
+                            <div>
+                                <x-input-label for="file" :value="__('diwan.documents.file_input')" />
+                                <input type="file" name="file" id="file" required accept=".pdf,.jpg,.jpeg,.png"
+                                       class="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <x-input-error :messages="$errors->get('file')" class="mt-2" />
+                            </div>
+                            <div class="flex justify-end">
+                                <x-primary-button>{{ __('diwan.documents.submit_attach') }}</x-primary-button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+
                 <div class="flex gap-3 pt-4">
-                    <a href="{{ route('documents.stream', $document) }}" target="_blank"
-                       class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-md hover:bg-gray-700">
-                        {{ __('diwan.documents.preview') }}
-                    </a>
+                    @if ($document->hasFile())
+                        <a href="{{ route('documents.stream', $document) }}" target="_blank"
+                           class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-md hover:bg-gray-700">
+                            {{ __('diwan.documents.preview') }}
+                        </a>
+                    @endif
                     <a href="{{ route('documents.index') }}"
                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-md hover:bg-gray-50">
                         {{ __('diwan.documents.back_to_list') }}

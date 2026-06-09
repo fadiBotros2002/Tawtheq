@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\DocumentStatus;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\User;
@@ -32,6 +33,7 @@ class DocumentFactory extends Factory
             'name_slug' => $nameSlug,
             'reference_number' => sprintf('%s-%s-finance-%s-%s', $nameSlug, $type, $uploadDate, $formattedSequence),
             'type' => $type,
+            'status' => DocumentStatus::Verified,
             'upload_date' => $uploadDate,
             'sequence' => $sequence,
             's3_path' => sprintf(
@@ -45,6 +47,23 @@ class DocumentFactory extends Factory
             'original_filename' => 'document.pdf',
             'mime_type' => 'application/pdf',
         ];
+    }
+
+    public function draft(): static
+    {
+        return $this->state(fn () => [
+            'status' => DocumentStatus::Draft,
+            's3_path' => null,
+            'original_filename' => null,
+            'mime_type' => null,
+        ]);
+    }
+
+    public function verified(): static
+    {
+        return $this->state(fn () => [
+            'status' => DocumentStatus::Verified,
+        ]);
     }
 
     /**

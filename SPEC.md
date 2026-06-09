@@ -1,7 +1,7 @@
 # SPEC — نظام توثيق (Tawtheq)
 
-> **آخر تحديث:** 2026-06-08  
-> **الحالة:** مُنفَّذ ويعمل (47 اختبار يمرّ)
+> **آخر تحديث:** 2026-06-09  
+> **الحالة:** مُنفَّذ ويعمل
 
 ---
 
@@ -44,7 +44,7 @@
 | Database | MySQL (إنتاج) / SQLite (تطوير) |
 | Storage | AWS S3 عبر `league/flysystem-aws-s3-v3` |
 | QR Code | `simplesoftwareio/simple-qrcode` |
-| Tests | PHPUnit (47 test) |
+| Tests | PHPUnit (79 test) |
 
 ---
 
@@ -73,7 +73,7 @@
 | الدور | القيمة في DB | الصلاحيات |
 |-------|-------------|-----------|
 | مدير | `admin` | يرى كل الوثائق + ينشئ مستخدمين |
-| موظف | `user` | يرفع وثائق + يرى وثائقه فقط |
+| موظف | `user` | يسجّل وثائق + يرى وثائقه فقط |
 
 ### 3.5 إنشاء المستخدمين
 - **فقط** المدير (`admin`) أو الـ Seeder
@@ -121,7 +121,7 @@ Enum: `App\Enums\DocumentType`
 **إدارة التصنيفات:**
 - المسار: `/categories` (قائمة) و `/categories/create` (إضافة)
 - المستخدم يربط وثائقه بتصنيفاته فقط
-- يجب إنشاء تصنيف واحد على الأقل قبل رفع وثيقة
+- يجب إنشاء تصنيف واحد على الأقل قبل تسجيل وثيقة
 - مستخدمان مختلفان يمكن أن يستخدما نفس الـ slug (مثل `finance`) — الرابط يميّزهما عبر `username`
 
 **لماذا slug وليس id في الرابط؟**
@@ -132,7 +132,7 @@ Enum: `App\Enums\DocumentType`
 
 ### 4.3 اسم الوثيقة ورقم المرجع
 
-كل وثيقة لها **اسم** يُدخله المستخدم عند الرفع (`name`).
+كل وثيقة لها **اسم** يُدخله المستخدم عند التسجيل (`name`).
 
 | العمود | الوصف |
 |--------|-------|
@@ -156,16 +156,29 @@ Enum: `App\Enums\DocumentType`
 - يُولَّد داخل `DB::transaction` + `lockForUpdate()` لمنع race conditions
 - يُخزَّن كـ `integer`، يُعرض في الروابط بصيغة **4 أرقام** مع padding: `0001`, `0004`
 
-### 4.5 تاريخ الرفع (`upload_date`)
+### 4.5 حالة الوثيقة (Status)
+
+| القيمة | التسمية | الوصف |
+|--------|---------|-------|
+| `draft` | مسودة | مسجّلة بدون ملف — رابط تحقق + رقم مرجع + QR متاح |
+| `verified` | موثّقة | ملف مرفوع على S3 |
+
+Enum: `App\Enums\DocumentStatus`
+
+- التسجيل **بدون ملف** → `draft`
+- التسجيل **مع ملف** أو رفع الملف لاحقاً من صفحة التفاصيل → `verified`
+- حالات إضافية ممكنة لاحقاً — حالياً هاتان الحالتان فقط
+
+### 4.6 تاريخ التسجيل (`upload_date`)
 - صيغة: **`dmY`** (يوم/شهر/سنة بدون فواصل)
 - مثال: `07062026` = 7 يونيو 2026
-- يُحسب عند الرفع: `now()->format('dmY')`
+- يُحسب عند التسجيل: `now()->format('dmY')`
 
-### 4.6 الملفات المقبولة
+### 4.7 الملفات المقبولة
 - PDF, JPG, JPEG, PNG
 - حد أقصى: 50 MB (`max:51200` KB)
 
-### 4.7 مسار S3 (خاص)
+### 4.8 مسار S3 (خاص)
 ```
 documents/{username}/{type}/{category_slug}/{upload_date}/{filename}
 ```
@@ -212,22 +225,26 @@ documents/{username}/{type}/{category_slug}/{upload_date}/{filename}
 ```
 1. المستخدم يسجّل دخول (username)
         ↓
-2. ينشئ تصنيفاته (إن لم تكن موجودة)، ثم يُدخل اسم الوثيقة ويختار نوع المعاملة (وارد/صادر) والتصنيف ويرفع الملف
+2. ينشئ تصنيفاته (إن لم تكن موجودة)، ثم يُدخل اسم الوثيقة ونوع المعاملة والتصنيف
+   (الملف اختياري عند التسجيل)
         ↓
-3. DocumentService:
+3. DocumentService::registerDocument:
    - يقفل آخر sequence (lockForUpdate)
    - يحسب التالي (+1)
    - يُولّد name_slug و reference_number
-   - يرفع الملف لـ S3 خاص
-   - ينشئ سجل Document
+   - بدون ملف → status = draft
+   - مع ملف → يرفع لـ S3 خاص + status = verified
         ↓
-4. يُعرض:
+4. يُعرض فوراً (حتى للمسودة):
    - رابط التحقق العام (نسخ + فتح)
    - QR Code يوجّه للرابط (تنزيل PNG)
         ↓
-5. أي شخص يفتح الرابط العام:
-   - يرى metadata (name, reference_number, username, type, category, date, sequence, filename)
-   - معاينة الملف عبر /file (stream من S3 بدون كشف URL)
+5. إن كانت مسودة: المستخدم يرفع الملف من صفحة التفاصيل
+   → DocumentService::attachFile → status = verified
+        ↓
+6. أي شخص يفتح الرابط العام:
+   - مسودة: metadata + شارة «بانتظار الملف» (بدون معاينة)
+   - موثّقة: metadata + معاينة الملف عبر /file (stream من S3)
 ```
 
 ---
@@ -256,8 +273,9 @@ documents/{username}/{type}/{category_slug}/{upload_date}/{filename}
 | POST | `/logout` | `logout` | |
 | GET | `/dashboard` | `dashboard` | redirect → documents.index |
 | GET | `/documents` | `documents.index` | قائمة الوثائق |
-| GET | `/documents/create` | `documents.create` | نموذج رفع |
-| POST | `/documents` | `documents.store` | حفظ وثيقة |
+| GET | `/documents/create` | `documents.create` | نموذج تسجيل |
+| POST | `/documents` | `documents.store` | تسجيل وثيقة (ملف اختياري) |
+| POST | `/documents/{document}/file` | `documents.attach-file` | رفع ملف لمسودة |
 | GET | `/documents/{document}` | `documents.show` | تفاصيل + QR + نسخ الرابط |
 | GET | `/documents/{document}/stream` | `documents.stream` | بث الملف (مسجّل) |
 | GET | `/categories` | `categories.index` | تصنيفات المستخدم |
@@ -316,10 +334,11 @@ documents/{username}/{type}/{category_slug}/{upload_date}/{filename}
 | `name_slug` | string | slug للرابط |
 | `reference_number` | string | unique — رقم المرجع |
 | `type` | enum | `inbound` \| `outbound` |
+| `status` | enum | `draft` \| `verified` — افتراضي `draft` |
 | `upload_date` | string(8) | `dmY` |
 | `sequence` | unsigned int | unique عالمي |
-| `s3_path` | string | مسار S3 الخاص |
-| `original_filename` | string | اسم الملف الأصلي |
+| `s3_path` | string nullable | مسار S3 الخاص — null للمسودة |
+| `original_filename` | string nullable | اسم الملف الأصلي |
 | `mime_type` | string nullable | |
 | `timestamps` | | |
 
@@ -335,7 +354,8 @@ documents/{username}/{type}/{category_slug}/{upload_date}/{filename}
 ```
 app/
 ├── Enums/
-│   └── DocumentType.php          # inbound | outbound
+│   ├── DocumentType.php          # inbound | outbound
+│   └── DocumentStatus.php        # draft | verified
 ├── Http/
 │   ├── Controllers/
 │   │   ├── CategoryController.php
@@ -348,6 +368,7 @@ app/
 │   └── Requests/
 │       ├── StoreCategoryRequest.php
 │       ├── StoreDocumentRequest.php
+│       ├── AttachDocumentFileRequest.php
 │       ├── Admin/StoreUserRequest.php
 │       └── Auth/LoginRequest.php    # username-based
 ├── Models/
@@ -355,7 +376,7 @@ app/
 │   ├── Document.php
 │   └── User.php
 └── Services/
-    └── DocumentService.php        # sequence + S3 upload
+    └── DocumentService.php        # sequence + register + attach file
 
 resources/views/
 ├── categories/
@@ -420,7 +441,7 @@ AWS_BUCKET=
 - التبديل: `/locale/{locale}` — يُحفظ في الجلسة
 - مكوّن `<x-locale-switcher />` في شريط التنقل وصفحات الضيف — أيقونة لغة (globe) مع قائمة منسدلة
 - صفحة التحقق العامة: `<x-locale-switcher labeled />` — زر واضح بعنوان «اللغة» واللغة الحالية
-- صفحة التحقق العامة: شارة خضراء «الوثيقة موثّقة» مع أيقونة ✓
+- صفحة التحقق العامة: شارة خضراء «موثّقة» أو كهرمانية «مسودة — بانتظار الملف»
 - ملفات الترجمة: `lang/{ar,en}/diwan.php`
 - `DocumentType::label()` يستخدم `__('diwan.document_type.*')`
 
@@ -434,7 +455,9 @@ AWS_BUCKET=
 - [x] استعادة كلمة المرور عبر البريد (forgot password)
 - [x] تحديث البريد في الملف الشخصي
 - [x] ترجمة ar/en مع مبدّل لغة
-- [x] رفع وثائق (inbound/outbound) مع اسم الوثيقة + اختيار تصنيف
+- [x] تسجيل وثائق (inbound/outbound) مع اسم الوثيقة + اختيار تصنيف + ملف اختياري
+- [x] حالات الوثيقة: مسودة (بدون ملف) / موثّقة (مع ملف)
+- [x] رفع الملف لاحقاً من صفحة التفاصيل لتحويل المسودة إلى موثّقة
 - [x] رقم مرجع تلقائي (`name-type-category-date-sequence`)
 - [x] رابط تحقق يتضمّن اسم الوثيقة (slug)
 - [x] تصنيفات وثائق خاصة بكل مستخدم (إضافة + ربط بالوثائق + slug في الرابط)
@@ -442,9 +465,9 @@ AWS_BUCKET=
 - [x] تخزين خاص على S3
 - [x] بث الملفات عبر Laravel proxy (بدون روابط S3)
 - [x] رابط تحقق عام بالصيغة المحددة
-- [x] QR Code بعد الرفع (تنزيل PNG + نسخ رابط التحقق)
+- [x] QR Code بعد التسجيل (تنزيل PNG + نسخ رابط التحقق) — حتى للمسودة
 - [x] صفحة تحقق عامة + معاينة ملف
-- [x] 47 اختبار PHPUnit (DocumentCategoryTest + CategoryManagementTest)
+- [x] 79 اختبار PHPUnit (مصادقة، admin، تصنيفات، وثائق، حالات draft/verified، تسلسل، بث، تحقق عام)
 
 ---
 
@@ -498,3 +521,6 @@ php artisan test
 | 2026-06-08 | دمج migrations (categories + documents بالحالة النهائية) — حذف migrations التعديل التراكمية |
 | 2026-06-08 | اسم الوثيقة + رقم المرجع + رابط تحقق جديد (`/{document_name}/...`) |
 | 2026-06-08 | إلغاء صفحة إدارة S3 للمدير (`/admin/documents`) |
+| 2026-06-08 | إضافة 26 اختباراً: admin users، صلاحيات الوثائق، تسلسل، بث ملفات، validation، حالات verify |
+| 2026-06-08 | حماية `documents.show` و `documents.stream` — المستخدم يرى وثائقه فقط (المدير يرى الكل) |
+| 2026-06-09 | «رفع وثيقة» → «تسجيل وثيقة» + حالات `draft`/`verified` + ملف اختياري عند التسجيل + رفع لاحق من التفاصيل |

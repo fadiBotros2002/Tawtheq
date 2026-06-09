@@ -6,7 +6,7 @@
             </h2>
             <a href="{{ route('documents.create') }}"
                class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
-                {{ __('diwan.documents.upload_btn') }}
+                {{ __('diwan.documents.register_btn') }}
             </a>
         </div>
     </x-slot>
@@ -26,6 +26,7 @@
                             <tr>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.name') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.sequence') }}</th>
+                                <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.status') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.type') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.category') }}</th>
                                 <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">{{ __('diwan.documents.user') }}</th>
@@ -45,6 +46,12 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            {{ $document->isVerified() ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                                            {{ $document->status->label() }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                             {{ $document->type->value === 'inbound' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800' }}">
                                             {{ $document->type->label() }}
                                         </span>
@@ -52,7 +59,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $document->category->label() }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $document->user->username }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $document->upload_date }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-700 max-w-xs truncate">{{ $document->original_filename }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-700 max-w-xs truncate">{{ $document->original_filename ?? '—' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <a href="{{ route('documents.show', $document) }}" class="text-indigo-600 hover:text-indigo-900 font-medium">
                                             {{ __('diwan.documents.view') }}
@@ -61,7 +68,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                    <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                                         {{ __('diwan.documents.empty') }}
                                     </td>
                                 </tr>

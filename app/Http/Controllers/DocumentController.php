@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DocumentType;
+use App\Http\Requests\AttachDocumentFileRequest;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Models\Document;
 use App\Services\DocumentService;
@@ -33,7 +34,7 @@ class DocumentController extends Controller
     }
 
     /**
-     * Show the upload form.
+     * Show the document registration form.
      */
     public function create(Request $request): View
     {
@@ -46,26 +47,52 @@ class DocumentController extends Controller
     }
 
     /**
-     * Store a newly uploaded document.
+     * Register a new document (with optional file).
      */
     public function store(StoreDocumentRequest $request): RedirectResponse
     {
-        $document = $this->documentService->createDocument(
+        $document = $this->documentService->registerDocument(
             $request->validated(),
+            $request->user(),
+            $request->file('file')
+        );
+
+        $message = $document->isVerified()
+            ? __('diwan.messages.document_verified')
+            : __('diwan.messages.document_registered');
+
+        return redirect()
+            ->route('documents.show', $document)
+            ->with('success', $message);
+    }
+
+    /**
+     * Attach a file to a draft document.
+     */
+    public function attachFile(AttachDocumentFileRequest $request, Document $document): RedirectResponse
+    {
+        $this->authorizeDocumentAccess($request, $document);
+
+        abort_unless($document->isDraft(), 422);
+
+        $this->documentService->attachFile(
+            $document,
             $request->user(),
             $request->file('file')
         );
 
         return redirect()
             ->route('documents.show', $document)
-            ->with('success', __('diwan.messages.document_uploaded'));
+            ->with('success', __('diwan.messages.document_verified'));
     }
 
     /**
      * Display document details with verification URL and QR code.
      */
-    public function show(Document $document): View
+    public function show(Request $request, Document $document): View
     {
+        $this->authorizeDocumentAccess($request, $document);
+
         $document->load(['user', 'category']);
 
         return view('documents.show', compact('document'));
@@ -74,8 +101,11 @@ class DocumentController extends Controller
     /**
      * Stream a document file through Laravel without exposing S3 URLs.
      */
-    public function stream(Document $document): StreamedResponse
+    public function stream(Request $request, Document $document): StreamedResponse
     {
+        $this->authorizeDocumentAccess($request, $document);
+
+        abort_unless($document->hasFile(), 404);
         abort_unless(Storage::disk('s3')->exists($document->s3_path), 404);
 
         return Storage::disk('s3')->response(
@@ -113,12 +143,23 @@ class DocumentController extends Controller
     ): StreamedResponse {
         $document = $this->findDocumentForVerify($document_name, $doctype, $category, $date, $sequence);
 
+        abort_unless($document->hasFile(), 404);
         abort_unless(Storage::disk('s3')->exists($document->s3_path), 404);
 
         return Storage::disk('s3')->response(
             $document->s3_path,
             $document->original_filename,
             ['Content-Disposition' => 'inline']
+        );
+    }
+
+    private function authorizeDocumentAccess(Request $request, Document $document): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user && ($user->isAdmin() || $document->user_id === $user->id),
+            403
         );
     }
 

@@ -19,10 +19,11 @@ return new class extends Migration
             $table->string('name_slug');
             $table->string('reference_number')->unique();
             $table->enum('type', ['inbound', 'outbound']);
+            $table->enum('status', ['draft', 'verified'])->default('draft');
             $table->string('upload_date', 8);
             $table->unsignedInteger('sequence')->unique();
-            $table->string('s3_path');
-            $table->string('original_filename');
+            $table->string('s3_path')->nullable();
+            $table->string('original_filename')->nullable();
             $table->string('mime_type')->nullable();
             $table->timestamps();
 

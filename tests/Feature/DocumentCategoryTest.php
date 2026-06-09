@@ -35,7 +35,7 @@ class DocumentCategoryTest extends TestCase
         $this->assertStringContainsString('/invoice/inbound/finance/08062026/0001', $document->verifyUrl());
     }
 
-    public function test_reference_number_is_generated_on_upload(): void
+    public function test_reference_number_is_generated_on_register(): void
     {
         Storage::fake('s3');
 
@@ -120,7 +120,7 @@ class DocumentCategoryTest extends TestCase
         $this->get('/contract/inbound/finance/08062026/0001')->assertNotFound();
     }
 
-    public function test_user_can_upload_document_with_own_category(): void
+    public function test_user_can_register_document_with_own_category(): void
     {
         Storage::fake('s3');
 
@@ -146,7 +146,7 @@ class DocumentCategoryTest extends TestCase
         ]);
     }
 
-    public function test_user_cannot_upload_with_another_users_category(): void
+    public function test_user_cannot_register_with_another_users_category(): void
     {
         Storage::fake('s3');
 
@@ -165,7 +165,7 @@ class DocumentCategoryTest extends TestCase
         $response->assertSessionHasErrors('category_id');
     }
 
-    public function test_upload_requires_category(): void
+    public function test_register_requires_category(): void
     {
         Storage::fake('s3');
 
@@ -181,7 +181,7 @@ class DocumentCategoryTest extends TestCase
         $response->assertSessionHasErrors('category_id');
     }
 
-    public function test_upload_requires_name(): void
+    public function test_register_requires_name(): void
     {
         Storage::fake('s3');
 

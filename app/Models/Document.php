@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,7 @@ class Document extends Model
         'name_slug',
         'reference_number',
         'type',
+        'status',
         'upload_date',
         'sequence',
         's3_path',
@@ -39,6 +41,7 @@ class Document extends Model
     {
         return [
             'type' => DocumentType::class,
+            'status' => DocumentStatus::class,
             'sequence' => 'integer',
         ];
     }
@@ -56,6 +59,21 @@ class Document extends Model
     public function formattedSequence(): string
     {
         return str_pad((string) $this->sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === DocumentStatus::Draft;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->status === DocumentStatus::Verified;
+    }
+
+    public function hasFile(): bool
+    {
+        return $this->s3_path !== null;
     }
 
     /**

@@ -6,7 +6,7 @@ return [
 
     'nav' => [
         'documents' => 'Documents',
-        'upload' => 'Upload document',
+        'register' => 'Register document',
         'categories' => 'Categories',
         'users' => 'Users',
         'profile' => 'Profile',
@@ -47,9 +47,16 @@ return [
 
     'documents' => [
         'index_title' => 'Document log',
-        'create_title' => 'Upload new document',
+        'create_title' => 'Register new document',
         'show_title' => 'Document details',
-        'upload_btn' => 'Upload document',
+        'register_btn' => 'Register document',
+        'status' => 'Status',
+        'no_file_yet' => 'No file uploaded yet',
+        'file_optional_hint' => 'Optional — you can upload the file later from the details page. Without a file the document is saved as a draft.',
+        'attach_file_title' => 'Upload file to complete verification',
+        'attach_file_hint' => 'Upload the file to change the document from draft to verified.',
+        'submit_attach' => 'Upload file and verify',
+        'submit_register' => 'Register document',
         'name' => 'Document name',
         'name_hint' => 'Used in the verification URL and reference number. Prefer an English name (e.g. invoice).',
         'reference_number' => 'Reference number',
@@ -65,9 +72,8 @@ return [
         'category' => 'Category',
         'choose_type' => 'Choose type',
         'choose_category' => 'Choose category',
-        'no_categories_hint' => 'You must create at least one category before uploading documents.',
+        'no_categories_hint' => 'You must create at least one category before registering documents.',
         'file_input' => 'File (PDF or image)',
-        'submit_upload' => 'Upload document',
         'upload_date' => 'Upload date',
         'verify_url' => 'Public verification URL',
         'open' => 'Open',
@@ -84,10 +90,18 @@ return [
         'outbound' => 'Outbound',
     ],
 
+    'document_status' => [
+        'draft' => 'Draft',
+        'verified' => 'Verified',
+    ],
+
     'verify' => [
         'title' => 'Document verification',
         'verified' => 'Document verified',
         'verified_hint' => 'This document is registered and authenticated in Tawtheq.',
+        'draft' => 'Registered — awaiting file',
+        'draft_hint' => 'This document is registered in Tawtheq. The file has not been uploaded yet.',
+        'no_file_preview' => 'No preview available — the file has not been uploaded yet.',
         'document_name' => 'Document name',
         'reference_number' => 'Reference number',
         'user' => 'User',
@@ -137,7 +151,8 @@ return [
     ],
 
     'messages' => [
-        'document_uploaded' => 'Document uploaded successfully.',
+        'document_registered' => 'Document registered as draft. You can upload the file later to complete verification.',
+        'document_verified' => 'Document verified successfully.',
         'user_created' => 'User created successfully.',
         'category_created' => 'Category created successfully.',
     ],

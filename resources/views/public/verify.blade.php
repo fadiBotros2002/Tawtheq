@@ -22,17 +22,31 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-4 rounded-xl border border-green-300 bg-green-100 px-5 py-4 shadow-sm">
-                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-600 text-white shadow-md ring-4 ring-green-200">
-                    <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
+            @if ($document->isVerified())
+                <div class="flex items-center gap-4 rounded-xl border border-green-300 bg-green-100 px-5 py-4 shadow-sm">
+                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-600 text-white shadow-md ring-4 ring-green-200">
+                        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-lg font-semibold text-green-900">{{ __('diwan.verify.verified') }}</p>
+                        <p class="text-sm text-green-800 mt-0.5">{{ __('diwan.verify.verified_hint') }}</p>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-lg font-semibold text-green-900">{{ __('diwan.verify.verified') }}</p>
-                    <p class="text-sm text-green-800 mt-0.5">{{ __('diwan.verify.verified_hint') }}</p>
+            @else
+                <div class="flex items-center gap-4 rounded-xl border border-amber-300 bg-amber-100 px-5 py-4 shadow-sm">
+                    <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white shadow-md ring-4 ring-amber-200">
+                        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-lg font-semibold text-amber-900">{{ __('diwan.verify.draft') }}</p>
+                        <p class="text-sm text-amber-800 mt-0.5">{{ __('diwan.verify.draft_hint') }}</p>
+                    </div>
                 </div>
-            </div>
+            @endif
 
             <div class="bg-white shadow-sm rounded-lg p-6 space-y-6">
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -64,24 +78,32 @@
                         <dt class="text-gray-500">{{ __('diwan.verify.sequence') }}</dt>
                         <dd class="font-mono font-semibold text-gray-900">{{ $document->formattedSequence() }}</dd>
                     </div>
-                    <div class="sm:col-span-2">
-                        <dt class="text-gray-500">{{ __('diwan.verify.filename') }}</dt>
-                        <dd class="text-gray-900">{{ $document->original_filename }}</dd>
-                    </div>
+                    @if ($document->hasFile())
+                        <div class="sm:col-span-2">
+                            <dt class="text-gray-500">{{ __('diwan.verify.filename') }}</dt>
+                            <dd class="text-gray-900">{{ $document->original_filename }}</dd>
+                        </div>
+                    @endif
                 </dl>
 
-                <div class="border-t border-gray-100 pt-6">
-                    <p class="text-sm text-gray-500 mb-3">{{ __('diwan.verify.preview') }}</p>
-                    @if (str_starts_with($document->mime_type ?? '', 'image/'))
-                        <img src="{{ route('documents.verify.stream', $document->verifyRouteParams()) }}" alt="{{ $document->original_filename }}" class="max-w-full rounded-lg border border-gray-200">
-                    @else
-                        <iframe
-                            src="{{ route('documents.verify.stream', $document->verifyRouteParams()) }}"
-                            class="w-full h-[70vh] rounded-lg border border-gray-200"
-                            title="{{ $document->original_filename }}">
-                        </iframe>
-                    @endif
-                </div>
+                @if ($document->hasFile())
+                    <div class="border-t border-gray-100 pt-6">
+                        <p class="text-sm text-gray-500 mb-3">{{ __('diwan.verify.preview') }}</p>
+                        @if (str_starts_with($document->mime_type ?? '', 'image/'))
+                            <img src="{{ route('documents.verify.stream', $document->verifyRouteParams()) }}" alt="{{ $document->original_filename }}" class="max-w-full rounded-lg border border-gray-200">
+                        @else
+                            <iframe
+                                src="{{ route('documents.verify.stream', $document->verifyRouteParams()) }}"
+                                class="w-full h-[70vh] rounded-lg border border-gray-200"
+                                title="{{ $document->original_filename }}">
+                            </iframe>
+                        @endif
+                    </div>
+                @else
+                    <div class="border-t border-gray-100 pt-6">
+                        <p class="text-sm text-gray-500">{{ __('diwan.verify.no_file_preview') }}</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
